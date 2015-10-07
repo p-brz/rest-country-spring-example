@@ -8,6 +8,23 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public class Country{
 	private String name;
 	private String capital;
+	private String region;
+	public String getRegion() {
+		return region;
+	}
+
+	public void setRegion(String region) {
+		this.region = region;
+	}
+	private int population;
+	
+	public int getPopulation() {
+		return population;
+	}
+
+	public void setPopulation(int population) {
+		this.population = population;
+	}
 	private List<Integer> latlng;
 	
 	public List<Integer> getLatlng() {

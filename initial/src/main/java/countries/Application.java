@@ -1,5 +1,6 @@
 package countries;
 
+import java.text.NumberFormat;
 import java.util.List;
 import java.util.Scanner;
 
@@ -26,6 +27,23 @@ public class Application implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
     	IInput inputMethod = new ScannerInput();
+    	String countryName = this.getCountryName(inputMethod);
+    	
+    	List<Country> allCountries = this.getCountryListFromAPI(countryName);
+    	this.checkCountryListSize(allCountries.size());
+    	
+    	int processedCountries = 0;
+        for(Country c : allCountries){
+        	processedCountries++;
+        	this.handleCountry(c, processedCountries);
+        }
+        
+        DefaultScanner.closeScanner();
+        this.printExit();
+        return;
+    }
+    
+    private String getCountryName(IInput inputMethod){
     	String countryName = inputMethod.getCountryName();
     	
     	if(countryName.isEmpty()){
@@ -33,7 +51,11 @@ public class Application implements CommandLineRunner {
     		System.exit(1);
     	}
     	
-        RestTemplate restTemplate = new RestTemplate();
+    	return countryName;
+    }
+    
+    private List<Country> getCountryListFromAPI(String countryName){
+    	RestTemplate restTemplate = new RestTemplate();
         
         ParameterizedTypeReference<List<Country>> typeRef = new ParameterizedTypeReference<List<Country>>() {};
         ResponseEntity<List<Country>> response = null;
@@ -43,55 +65,90 @@ public class Application implements CommandLineRunner {
         				, HttpMethod.GET, null, typeRef);
         }catch(Exception e){
         	System.out.println("Não encontramos países para estes parâmetros");
-        	return;
+        	System.exit(0);
         }
       
         
         List<Country> allCountries = response.getBody();
-        int foundCountries = allCountries.size();
+        return allCountries;
+    }
+    
+    private void checkCountryListSize(int foundCountries){
         if(foundCountries > 1){
-        	System.out.println("Encontramos " + allCountries.size() + " correspondências: ");
+        	System.out.println("Encontramos " + foundCountries + " correspondências: ");
+        }else if(foundCountries == 1){
+        	System.out.println("Encontramos " + foundCountries + " correspondência: ");
         }else if(foundCountries == 0){
         	System.out.println("Não encontramos países para estes parâmetros");
         	return;
         }
-        for(Country c : allCountries){
-        	System.out.println("");
-        	String cName = c.getName();
-        	String cCapital = c.getCapital();
-        	
-        	String cComplemento = "";
-        	if(!cCapital.isEmpty()){
-        		cComplemento = String.format("tem como capital '%s'", cCapital); 
-        	}else{
-        		cComplemento = "não possui capital registrada na API";
-        	}
-        	
-        	String text = String.format("O país de nome '%s' %s", cName, cComplemento);
-        	System.out.println(text);
-        	
-        	if(c.getLatlng() != null && c.getLatlng().size() >= 2){
-            	int lat = c.getLatlng().get(0);
-            	int lng = c.getLatlng().get(1);
-            	
-            	Scanner scanner = DefaultScanner.getInstance();
-            	System.out.println("Gostaria de visualizar um mapa com o país selecionado? (y/N)");
-            	
-            	String mapResponse = scanner.nextLine();
-            	scanner.close();
-            	if(mapResponse.toLowerCase().startsWith("y")){
-            		String url = String.format("http://www.openstreetmap.org/#map=4/%d/%d&layers=Q", lat, lng);
-            		BrowserLauncher launcher = new BrowserLauncher();
-            		launcher.openURLinBrowser(url);
-            	}
-        	}else{
-        		System.out.println("Este país não tem localização informada");
-        	}
-        	
-        	DefaultScanner.closeScanner();
-        }
-        System.out.println("");
-        System.out.println("Valeu falou!");
-        return;
     }
+    
+    private void handleCountry(Country c, int number){
+    	this.printCountryInfo(c, number);
+    	this.printCountryMap(c);
+    }
+    
+    private void printCountryInfo(Country c, int number){
+    	System.out.println("");
+    	String cName = c.getName();
+    	String cRegion = c.getRegion();
+    	String cCapital = c.getCapital();
+    	int population = c.getPopulation();
+    	
+    	if(cCapital.isEmpty()){
+    		cCapital = "Não informada pela API";
+    	}
+    	
+    	
+    	String formattedPopulation = NumberFormat.getInstance().format(population);
+    	System.out.println(String.format("%s) %s", "" + number, cName));
+    	System.out.println(String.format("\t-Capital: %s", cCapital));
+    	System.out.println(String.format("\t-Região: %s", cRegion));
+    	System.out.println(String.format("\t-População: %s", formattedPopulation));
+    }
+    
+    private void printCountryMap(Country c){
+    	if(c.getLatlng() != null && c.getLatlng().size() >= 2){
+        	int lat = c.getLatlng().get(0);
+        	int lng = c.getLatlng().get(1);
+        	
+        	Scanner scanner = DefaultScanner.getInstance();
+        	System.out.println();
+        	System.out.println("\tGostaria de visualizar um mapa com o país selecionado? (y/N)");
+        	System.out.print("\t> ");
+        	
+        	String mapResponse = scanner.nextLine();
+        	if(mapResponse.toLowerCase().startsWith("y")){
+        		String url = String.format("http://www.openstreetmap.org/#map=5/%d/%d&layers=Q", lat, lng);
+        		try{
+        			BrowserLauncher launcher = new BrowserLauncher();
+            		launcher.openURLinBrowser(url);
+        		}catch(Exception e){
+        			System.out.println("Não foi possível abrir o browser automaticamente");
+        			System.out.println("URL do mapa: " + url);
+        		}
+        	}
+    	}else{
+    		System.out.println("Este país não tem localização informada");
+    	}
+    }
+    
+    private void printExit(){
+    	System.out.println("");
+    	System.out.println("\t!! Isso é tudo pessoal !!");
+    	System.out.println("");
+        System.out.println(" - Baseado no exemplo 'Consuming a RESTful Web Service'!");
+        System.out.println(" - Disponível em 'http://spring.io/guides/gs/consuming-rest/'");
+        System.out.println("");
+        System.out.println("\tDesenvolvimento Web - Server Side");
+        System.out.println(" - Dupla:");
+        System.out.println("    * Alison Bento");
+        System.out.println("    * Paulo Leonardo");
+        System.out.println("");
+        System.out.println("");
+        
+    }
+    
+    
 }
