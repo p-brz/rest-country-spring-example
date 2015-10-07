@@ -70,6 +70,14 @@ public class Application implements CommandLineRunner {
         	
         	String text = String.format("O país de nome '%s' %s", cName, cComplemento);
         	System.out.println(text);
+        	
+
+        	if(c.getLatlng() != null && c.getLatlng().size() >= 2){
+            	int lat = c.getLatlng().get(0);
+            	int lng = c.getLatlng().get(1);
+            	String url = String.format("http://www.openstreetmap.org/#map=6/%d/%d&layers=Q", lat, lng);
+            	System.out.println("Mapa disponível em: " + url);
+        	}
         }
     }
 }

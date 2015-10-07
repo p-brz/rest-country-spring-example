@@ -1,12 +1,23 @@
 package countries;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class Country{
 	private String name;
 	private String capital;
+	private List<Integer> latlng;
 	
+	public List<Integer> getLatlng() {
+		return latlng;
+	}
+
+	public void setLatlng(List<Integer> latLng) {
+		this.latlng = latLng;
+	}
+
 	public String getCapital() {
 		return capital;
 	}
