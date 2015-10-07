@@ -28,9 +28,12 @@ dependencies {
     compile("org.springframework.boot:spring-boot-starter")
     compile("org.springframework:spring-web")
     compile("com.fasterxml.jackson.core:jackson-databind")
+    compile files('libs/BrowserLauncher2-1_3.jar')
     testCompile("junit:junit")
 }
 
 task wrapper(type: Wrapper) {
     gradleVersion = '2.3'
 }
+
+mainClassName = "countries.Application"
